@@ -674,7 +674,13 @@ function openItemDetail(id, type){
 
     <div class="meta">
       📞 ช่องทางติดต่อ:
-      ${escapeHtml(item.contact || "ยังไม่ได้ระบุ")}
+      ${
+        item.contact
+      ? `<a href="tel:${item.contact.replace(/[^\d+]/g, '')}">
+          ${escapeHtml(item.contact)}
+        </a>`
+      : "ยังไม่ได้ระบุ"
+  }
     </div>
   `;
 
