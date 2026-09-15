@@ -767,6 +767,31 @@ function openItemDetail(id, type){
   alert("แก้ไขรายการเรียบร้อยแล้ว");
   await loadItems();
 }
+  async function deleteItem(id, type) {
+  if (!currentUser) {
+    alert("กรุณาเข้าสู่ระบบก่อน");
+    return;
+  }
+
+  const confirmDelete = confirm("ต้องการลบรายการนี้หรือไม่?");
+  if (!confirmDelete) return;
+
+  const table = type === "lost" ? "lost_items" : "found_items";
+
+  const { error } = await sb
+    .from(table)
+    .delete()
+    .eq("id", id)
+    .eq("user_id", currentUser.id);
+
+  if (error) {
+    alert("ลบไม่สำเร็จ: " + error.message);
+    return;
+  }
+
+  alert("ลบรายการเรียบร้อยแล้ว");
+  await loadItems();
+}
 
   // =========================
   // AUTH
