@@ -641,6 +641,7 @@ function openItemDetail(id, type){
   if(!item){
     return;
   }
+  
 
   document.getElementById("detailTitle").textContent =
     item.title || "รายละเอียดรายการ";
@@ -698,6 +699,73 @@ function openItemDetail(id, type){
   document
     .getElementById("detailModal")
     .classList.add("show");
+}
+  async function editItem(id, type) {
+  if (!currentUser) {
+    alert("กรุณาเข้าสู่ระบบก่อน");
+    return;
+  }
+
+  const table = type === "lost" ? "lost_items" : "found_items";
+
+  const { data, error } = await supabase
+    .from(table)
+    .select("*")
+    .eq("id", id)
+    .eq("user_id", currentUser.id)
+    .single();
+
+  if (error || !data) {
+    alert("ไม่พบรายการ หรือคุณไม่มีสิทธิ์แก้ไขรายการนี้");
+    return;
+  }
+
+  const newTitle = prompt("ชื่อรายการ", data.title || "");
+  if (newTitle === null) return;
+
+  const newDescription = prompt(
+    "รายละเอียด",
+    data.description || ""
+  );
+  if (newDescription === null) return;
+
+  const newLocation = prompt(
+    "สถานที่",
+    data.location || ""
+  );
+  if (newLocation === null) return;
+
+  const newContact = prompt(
+    "ช่องทางติดต่อ",
+    data.contact || ""
+  );
+  if (newContact === null) return;
+
+  const newReporterName = prompt(
+    "ชื่อผู้แจ้ง",
+    data.reporter_name || ""
+  );
+  if (newReporterName === null) return;
+
+  const { error: updateError } = await supabase
+    .from(table)
+    .update({
+      title: newTitle.trim(),
+      description: newDescription.trim(),
+      location: newLocation.trim(),
+      contact: newContact.trim(),
+      reporter_name: newReporterName.trim()
+    })
+    .eq("id", id)
+    .eq("user_id", currentUser.id);
+
+  if (updateError) {
+    alert("แก้ไขไม่สำเร็จ: " + updateError.message);
+    return;
+  }
+
+  alert("แก้ไขรายการเรียบร้อยแล้ว");
+  await loadItems();
 }
 
   // =========================
