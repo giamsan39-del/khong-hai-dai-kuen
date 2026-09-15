@@ -167,6 +167,13 @@
       <label>สถานที่</label>
       <input id="itemLocation" placeholder="เช่น อาคารเรียน 2">
     </div>
+    <div class="form-row">
+  <label>ช่องทางติดต่อ</label>
+  <input
+    id="itemContact"
+    placeholder="เช่น 08x-xxx-xxxx หรือ email@example.com"
+  >
+</div>
 
     <div class="form-row">
       <label>วันที่</label>
@@ -890,6 +897,11 @@
       location:
         document
           .getElementById("itemLocation")
+          .value
+          .trim(),
+      contact:
+        document
+          .getElementById("itemContact")
           .value
           .trim()
 
