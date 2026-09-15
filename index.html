@@ -195,6 +195,25 @@
 
   </div>
 </div>
+  <!-- ITEM DETAIL MODAL -->
+<div id="detailModal" class="modal">
+  <div class="modal-box">
+
+    <h2 id="detailTitle">รายละเอียดรายการ</h2>
+
+    <div id="detailContent"></div>
+
+    <div class="actions">
+      <button
+        class="ghost"
+        onclick="closeModal('detailModal')"
+      >
+        ปิด
+      </button>
+    </div>
+
+  </div>
+</div>
 
 
 <script>
@@ -551,6 +570,14 @@
             )
           }
         </p>
+        
+        <button
+  type="button"
+  class="secondary"
+  onclick="openItemDetail(${x.id}, '${x.type}')"
+>
+  ดูรายละเอียด / ติดต่อผู้แจ้ง
+</button>
 
       </article>
 
@@ -576,7 +603,68 @@
       }[m])
     );
   }
+  
+  // =========================
+// ITEM DETAIL
+// =========================
 
+function openItemDetail(id, type){
+
+  const item = items.find(
+    x => x.id === Number(id) && x.type === type
+  );
+
+  if(!item){
+    return;
+  }
+
+  document.getElementById("detailTitle").textContent =
+    item.title || "รายละเอียดรายการ";
+
+  document.getElementById("detailContent").innerHTML = `
+    ${
+      item.image_url
+      ? `
+        <img
+          class="item-image"
+          src="${escapeHtml(item.image_url)}"
+          alt="${escapeHtml(item.title || "รูปสิ่งของ")}"
+        >
+      `
+      : ""
+    }
+
+    <div class="meta">
+      ${item.type === "lost" ? "🔎 ของหาย" : "📦 พบของ"}
+    </div>
+
+    <div class="meta">
+      📂 หมวดหมู่: ${escapeHtml(item.category || "-")}
+    </div>
+
+    <div class="meta">
+      📍 สถานที่: ${escapeHtml(item.location || "-")}
+    </div>
+
+    <div class="meta">
+      📅 วันที่:
+      ${escapeHtml(item.lost_date || item.found_date || "-")}
+    </div>
+
+    <p>
+      ${escapeHtml(item.description || "ไม่มีรายละเอียดเพิ่มเติม")}
+    </p>
+
+    <div class="meta">
+      📞 ช่องทางติดต่อ:
+      ${escapeHtml(item.contact || "ยังไม่ได้ระบุ")}
+    </div>
+  `;
+
+  document
+    .getElementById("detailModal")
+    .classList.add("show");
+}
 
   // =========================
   // AUTH
