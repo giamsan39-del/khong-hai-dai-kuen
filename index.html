@@ -708,7 +708,7 @@ function openItemDetail(id, type){
 
   const table = type === "lost" ? "lost_items" : "found_items";
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from(table)
     .select("*")
     .eq("id", id)
