@@ -578,6 +578,23 @@
 >
   ดูรายละเอียด / ติดต่อผู้แจ้ง
 </button>
+<div class="actions">
+  <button
+    type="button"
+    class="secondary"
+    onclick="editItem(${x.id}, '${x.type}')"
+  >
+    ✏️ แก้ไข
+  </button>
+
+  <button
+    type="button"
+    class="ghost"
+    onclick="deleteItem(${x.id}, '${x.type}')"
+  >
+    🗑️ ลบ
+  </button>
+</div>
 
       </article>
 
