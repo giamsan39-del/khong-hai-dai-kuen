@@ -747,7 +747,7 @@ function openItemDetail(id, type){
   );
   if (newReporterName === null) return;
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await sb
     .from(table)
     .update({
       title: newTitle.trim(),
