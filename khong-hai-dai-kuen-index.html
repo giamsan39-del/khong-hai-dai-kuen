@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ของหายได้คืน</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Tahoma,sans-serif;background:#f6f7fb;color:#172033}
+    header{background:#fff;border-bottom:1px solid #e7e9ef;position:sticky;top:0;z-index:10}
+    .nav{max-width:1100px;margin:auto;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+    .brand{font-size:21px;font-weight:800;color:#111827}
+    nav{display:flex;gap:8px;flex-wrap:wrap}
+    button{border:0;border-radius:10px;padding:10px 15px;font-size:15px;cursor:pointer}
+    .primary{background:#2563eb;color:#fff}.secondary{background:#eef2ff;color:#1d4ed8}.danger{background:#fee2e2;color:#b91c1c}.ghost{background:#f3f4f6;color:#374151}
+    main{max-width:1100px;margin:auto;padding:28px 20px}
+    .hero{background:linear-gradient(135deg,#1d4ed8,#4f46e5);color:#fff;border-radius:22px;padding:34px;margin-bottom:24px}
+    .hero h1{font-size:34px;margin:0 0 10px}.hero p{margin:0 0 20px;opacity:.92}
+    .search{display:flex;gap:8px}.search input{flex:1}
+    input,select,textarea{width:100%;padding:12px;border:1px solid #d7dbe5;border-radius:10px;background:#fff;font:inherit}
+    textarea{min-height:100px;resize:vertical}
+    .tabs{display:flex;gap:8px;margin:18px 0}.tabs button.active{background:#111827;color:#fff}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+    .card{background:#fff;border:1px solid #e7e9ef;border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .badge{display:inline-block;padding:5px 9px;border-radius:999px;font-size:12px;font-weight:700;background:#e0e7ff;color:#3730a3}
+    .meta{color:#667085;font-size:14px;margin:7px 0}
+    .empty{text-align:center;padding:40px;color:#667085}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:20}
+    .modal.show{display:flex}.modal-box{background:#fff;border-radius:18px;padding:22px;max-width:480px;width:100%;max-height:90vh;overflow:auto}
+    .modal-box h2{margin-top:0}.form-row{margin-bottom:12px}.form-row label{display:block;font-size:14px;font-weight:700;margin-bottom:6px}
+    .actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+    .hidden{display:none!important}
+    .status{margin:12px 0;padding:10px;border-radius:10px;background:#f3f4f6;font-size:14px}
+    footer{text-align:center;color:#98a2b3;padding:30px}
+    @media(max-width:600px){.hero h1{font-size:28px}.nav{align-items:flex-start;flex-direction:column}.search{flex-direction:column}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="nav">
+    <div class="brand">🔎 ของหายได้คืน</div>
+    <nav>
+      <button class="ghost" onclick="showHome()">หน้าแรก</button>
+      <button class="secondary" onclick="openItemModal('lost')">📢 แจ้งของหาย</button>
+      <button class="secondary" onclick="openItemModal('found')">📦 แจ้งพบของ</button>
+      <button id="authBtn" class="primary" onclick="openAuth()">เข้าสู่ระบบ</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>ของหายได้คืน</h1>
+    <p>พื้นที่สำหรับแจ้งของหายและของที่พบ เพื่อช่วยให้เจ้าของได้ของกลับคืน</p>
+    <div class="search">
+      <input id="searchInput" placeholder="ค้นหาชื่อสิ่งของ สถานที่ หรือรายละเอียด..." oninput="renderItems()" />
+      <button class="primary" onclick="renderItems()">🔎 ค้นหา</button>
+    </div>
+  </section>
+
+  <div id="status" class="status">กำลังเชื่อมต่อฐานข้อมูล...</div>
+
+  <div class="tabs">
+    <button id="tabAll" class="active" onclick="setTab('all')">ทั้งหมด</button>
+    <button id="tabLost" onclick="setTab('lost')">🔎 ของหาย</button>
+    <button id="tabFound" onclick="setTab('found')">📦 ของที่พบ</button>
+    <button id="tabMine" onclick="setTab('mine')">👤 ของฉัน</button>
+  </div>
+
+  <section id="items" class="grid"></section>
+</main>
+
+<footer>ของหายได้คืน · ระบบต้นแบบ</footer>
+
+<div id="authModal" class="modal">
+  <div class="modal-box">
+    <h2 id="authTitle">เข้าสู่ระบบ</h2>
+    <div class="form-row"><label>อีเมล</label><input id="email" type="email" autocomplete="email"></div>
+    <div class="form-row"><label>รหัสผ่าน</label><input id="password" type="password" autocomplete="current-password"></div>
+    <div id="fullNameRow" class="form-row hidden"><label>ชื่อ</label><input id="fullName" autocomplete="name"></div>
+    <div id="authMessage" class="status hidden"></div>
+    <div class="actions">
+      <button class="ghost" onclick="closeModal('authModal')">ยกเลิก</button>
+      <button class="secondary" onclick="toggleAuthMode()">สลับ สมัคร/เข้าสู่ระบบ</button>
+      <button class="primary" onclick="submitAuth()">ดำเนินการ</button>
+    </div>
+  </div>
+</div>
+
+<div id="itemModal" class="modal">
+  <div class="modal-box">
+    <h2 id="itemTitle">แจ้งของหาย</h2>
+    <div class="form-row"><label>ชื่อสิ่งของ *</label><input id="itemName" placeholder="เช่น กระเป๋าสีดำ"></div>
+    <div class="form-row"><label>รายละเอียด</label><textarea id="itemDescription" placeholder="สี ยี่ห้อ จุดสังเกต ฯลฯ"></textarea></div>
+    <div class="form-row"><label>หมวดหมู่</label>
+      <select id="itemCategory"><option>กระเป๋า</option><option>โทรศัพท์</option><option>กุญแจ</option><option>เอกสาร</option><option>อุปกรณ์การเรียน</option><option>อื่นๆ</option></select>
+    </div>
+    <div class="form-row"><label>สถานที่</label><input id="itemLocation" placeholder="เช่น อาคารเรียน 2"></div>
+    <div class="form-row"><label>วันที่</label><input id="itemDate" type="date"></div>
+    <div id="itemMessage" class="status hidden"></div>
+    <div class="actions">
+      <button class="ghost" onclick="closeModal('itemModal')">ยกเลิก</button>
+      <button class="primary" onclick="saveItem()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // =========================
+  // ใส่ค่าจาก Supabase ตรงนี้
+  // =========================
+  const SUPABASE_URL = "YOUR_SUPABASE_URL";
+  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+  let sb = null;
+  let currentUser = null;
+  let currentTab = "all";
+  let items = [];
+  let itemMode = "lost";
+  let authMode = "login";
+
+  function configured(){
+    return !SUPABASE_URL.includes("YOUR_") && !SUPABASE_ANON_KEY.includes("YOUR_");
+  }
+
+  function setStatus(msg, ok=false){
+    const el=document.getElementById("status");
+    el.textContent=msg;
+    el.style.background=ok ? "#dcfce7" : "#f3f4f6";
+    el.style.color=ok ? "#166534" : "#374151";
+  }
+
+  async function init(){
+    if(!configured()){
+      setStatus("ขั้นตอนถัดไป: ใส่ Supabase URL และ anon key ในไฟล์นี้ก่อนนำเว็บขึ้นออนไลน์");
+      renderItems();
+      return;
+    }
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const {data:{session}} = await sb.auth.getSession();
+    currentUser = session?.user || null;
+    updateAuthButton();
+    await loadItems();
+    sb.auth.onAuthStateChange((_event, session)=>{
+      currentUser=session?.user||null; updateAuthButton(); loadItems();
+    });
+    sb.channel("items-realtime")
+      .on("postgres_changes",{event:"*",schema:"public",table:"lost_items"},()=>loadItems())
+      .on("postgres_changes",{event:"*",schema:"public",table:"found_items"},()=>loadItems())
+      .subscribe();
+  }
+
+  function updateAuthButton(){
+    const b=document.getElementById("authBtn");
+    if(currentUser){
+      b.textContent="ออกจากระบบ";
+      b.onclick=logout;
+      setStatus("เข้าสู่ระบบแล้ว: "+(currentUser.email||""), true);
+    }else{
+      b.textContent="เข้าสู่ระบบ";
+      b.onclick=openAuth;
+    }
+  }
+
+  async function loadItems(){
+    if(!sb){ renderItems(); return; }
+    const [lost,found]=await Promise.all([
+      sb.from("lost_items").select("*").order("created_at",{ascending:false}),
+      sb.from("found_items").select("*").order("created_at",{ascending:false})
+    ]);
+    if(lost.error||found.error){
+      setStatus("โหลดข้อมูลไม่สำเร็จ: "+(lost.error?.message||found.error?.message));
+      return;
+    }
+    items=[
+      ...(lost.data||[]).map(x=>({...x,type:"lost"})),
+      ...(found.data||[]).map(x=>({...x,type:"found"}))
+    ].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+    renderItems();
+  }
+
+  function setTab(tab){
+    currentTab=tab;
+    document.querySelectorAll(".tabs button").forEach(b=>b.classList.remove("active"));
+    document.getElementById("tab"+(tab==="all"?"All":tab==="lost"?"Lost":tab==="found"?"Found":"Mine")).classList.add("active");
+    renderItems();
+  }
+
+  function renderItems(){
+    const q=(document.getElementById("searchInput").value||"").toLowerCase().trim();
+    let data=items.filter(x=>{
+      if(currentTab==="lost" && x.type!=="lost") return false;
+      if(currentTab==="found" && x.type!=="found") return false;
+      if(currentTab==="mine" && (!currentUser || x.user_id!==currentUser.id)) return false;
+      const text=[x.title,x.description,x.category,x.location].join(" ").toLowerCase();
+      return !q || text.includes(q);
+    });
+    const box=document.getElementById("items");
+    if(!data.length){
+      box.innerHTML='<div class="card empty" style="grid-column:1/-1">ยังไม่มีรายการที่ตรงกับการค้นหา</div>';
+      return;
+    }
+    box.innerHTML=data.map(x=>`
+      <article class="card">
+        <span class="badge">${x.type==="lost"?"🔎 ของหาย":"📦 พบของ"}</span>
+        <h3>${escapeHtml(x.title||"ไม่ระบุชื่อ")}</h3>
+        <div class="meta">📍 ${escapeHtml(x.location||"ไม่ระบุสถานที่")}</div>
+        <div class="meta">📅 ${escapeHtml(x.lost_date||x.found_date||"-")}</div>
+        <p>${escapeHtml(x.description||"ไม่มีรายละเอียดเพิ่มเติม")}</p>
+      </article>`).join("");
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+  }
+
+  function openAuth(){
+    authMode="login";
+    document.getElementById("authTitle").textContent="เข้าสู่ระบบ";
+    document.getElementById("fullNameRow").classList.add("hidden");
+    document.getElementById("authMessage").classList.add("hidden");
+    document.getElementById("authModal").classList.add("show");
+  }
+
+  function toggleAuthMode(){
+    authMode=authMode==="login"?"register":"login";
+    document.getElementById("authTitle").textContent=authMode==="login"?"เข้าสู่ระบบ":"สมัครสมาชิก";
+    document.getElementById("fullNameRow").classList.toggle("hidden",authMode==="login");
+  }
+
+  async function submitAuth(){
+    if(!sb){ alert("ยังไม่ได้ตั้งค่า Supabase URL/anon key"); return; }
+    const email=document.getElementById("email").value.trim();
+    const password=document.getElementById("password").value;
+    const fullName=document.getElementById("fullName").value.trim();
+    const msg=document.getElementById("authMessage");
+    msg.classList.remove("hidden");
+    if(authMode==="login"){
+      const {error}=await sb.auth.signInWithPassword({email,password});
+      msg.textContent=error?error.message:"เข้าสู่ระบบสำเร็จ";
+      if(!error) closeModal("authModal");
+    }else{
+      const {error}=await sb.auth.signUp({email,password,options:{data:{full_name:fullName}}});
+      msg.textContent=error?error.message:"สมัครสำเร็จ กรุณาตรวจอีเมลเพื่อยืนยันบัญชี";
+    }
+  }
+
+  async function logout(){
+    if(sb) await sb.auth.signOut();
+  }
+
+  function openItemModal(type){
+    if(!currentUser){ openAuth(); alert("กรุณาเข้าสู่ระบบก่อนแจ้งรายการ"); return; }
+    itemMode=type;
+    document.getElementById("itemTitle").textContent=type==="lost"?"📢 แจ้งของหาย":"📦 แจ้งพบของ";
+    document.getElementById("itemMessage").classList.add("hidden");
+    document.getElementById("itemModal").classList.add("show");
+    document.getElementById("itemDate").value=new Date().toISOString().slice(0,10);
+  }
+
+  async function saveItem(){
+    if(!sb||!currentUser) return;
+    const payload={
+      user_id:currentUser.id,
+      title:document.getElementById("itemName").value.trim(),
+      description:document.getElementById("itemDescription").value.trim(),
+      category:document.getElementById("itemCategory").value,
+      location:document.getElementById("itemLocation").value.trim()
+    };
+    if(itemMode==="lost") payload.lost_date=document.getElementById("itemDate").value;
+    else payload.found_date=document.getElementById("itemDate").value;
+    if(!payload.title){ alert("กรุณาใส่ชื่อสิ่งของ"); return; }
+    const table=itemMode==="lost"?"lost_items":"found_items";
+    const {error}=await sb.from(table).insert(payload);
+    const msg=document.getElementById("itemMessage");
+    msg.classList.remove("hidden");
+    msg.textContent=error?error.message:"บันทึกรายการสำเร็จ";
+    if(!error){ closeModal("itemModal"); await loadItems(); }
+  }
+
+  function closeModal(id){ document.getElementById(id).classList.remove("show"); }
+  function showHome(){ setTab("all"); window.scrollTo({top:0,behavior:"smooth"}); }
+
+  init();
+</script>
+</body>
+</html>
