@@ -176,6 +176,13 @@
 </div>
 
     <div class="form-row">
+  <label>ชื่อผู้แจ้ง</label>
+  <input
+    id="reporterName"
+    placeholder="เช่น สมชาย ใจดี"
+  >
+</div>
+    <div class="form-row">
       <label>วันที่</label>
       <input id="itemDate" type="date">
     </div>
@@ -662,7 +669,7 @@ function openItemDetail(id, type){
     <div class="meta">
       📍 สถานที่: ${escapeHtml(item.location || "-")}
     </div>
-
+    
     <div class="meta">
       📅 วันที่:
       ${escapeHtml(item.lost_date || item.found_date || "-")}
@@ -671,7 +678,11 @@ function openItemDetail(id, type){
     <p>
       ${escapeHtml(item.description || "ไม่มีรายละเอียดเพิ่มเติม")}
     </p>
-
+    
+    <div class="meta">
+  👤 ชื่อผู้แจ้ง:
+  ${escapeHtml(item.reporter_name || "ยังไม่ได้ระบุ")}
+</div>
     <div class="meta">
       📞 ช่องทางติดต่อ:
       ${
@@ -1010,6 +1021,11 @@ function openItemDetail(id, type){
           .getElementById("itemLocation")
           .value
           .trim(),
+      reporter_name:
+  document
+    .getElementById("reporterName")
+    .value
+    .trim(),
       contact:
         document
           .getElementById("itemContact")
